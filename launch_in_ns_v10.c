@@ -120,7 +120,11 @@ int main(int argc, char** argv)
   fprintf(stdout,"*** interfaces in global namespace:\n");
   netns_change(NULL, fd_global_netns);
   system("ifconfig -a");
-  
-  close(fd_global_netns);
+/* End testing function netns_change() */  
+
+/* Close this file if in the next
+ * you don't need to change netns
+*/  
+  close(fd_global_netns); 
   return 0; 
 }
