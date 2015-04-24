@@ -4,12 +4,12 @@ Description of function "netns_change()":
   If you need to change current netns to global netns: set the first argument "NULL", the second argument is file       descriptor of global netns (it must be saved before first call of this function). If you need to change current       netns to another netns: set the first argument as netns which you need, the second argument may be any.
 
 Algorithm of function "netns_change()":
-1.If "nsname" == NULL (we need to return to global netns) and file descriptor of global network namespace is correct -> join to global network namespace and exit function succesfull.
-If "nsname" != NULL (we need to change to some netns) do:
-2.Get path for network namespace "nsname".
-3.Create the base netns directory if it doesn't exist.
-4.Create the filesystem state.
-5.Join to network namespace "nsname".
+  1.If "nsname" == NULL (we need to return to global netns) and file descriptor of global network namespace is correct -> join to global network namespace and exit function succesfull.
+  If "nsname" != NULL (we need to change to some netns) do:
+  2.Get path for network namespace "nsname".
+  3.Create the base netns directory if it doesn't exist.
+  4.Create the filesystem state.
+  5.Join to network namespace "nsname".
 
 ----------------------------------------------------------------------------------------------------------------------
 
@@ -19,10 +19,10 @@ Description of function "open_socket_in_netns()":
   The first argument is name of network namespace, in which you need to open socket. The next free arguments specified   by function "socket": domain, type, protocol.
   
 Algorithm of function "open_socket_in_netns()":
-1.Get path to the global network namespace of this process.
-2.Save file descriptor of global network namespace.
-3.Change netns to "nsname".
-4.Open socket in netns "nsname".
-5.Return to global netns.
-6.Close file descriptor of global network namespace.
-7.Return file descriptor of socket which openning in netns "nsname".
+  1.Get path to the global network namespace of this process.
+  2.Save file descriptor of global network namespace.
+  3.Change netns to "nsname".
+  4.Open socket in netns "nsname".
+  5.Return to global netns.
+  6.Close file descriptor of global network namespace.
+  7.Return file descriptor of socket which openning in netns "nsname".
