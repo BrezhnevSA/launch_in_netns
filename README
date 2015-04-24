@@ -1,10 +1,14 @@
-File "launch_in_ns_v10.c" contain one function("netns_change()"), which can change network namespace to which you need, and some test, which shows correct work of this function.
+File "launch_in_ns_v10.c" contain one function("netns_change()"), which can change network namespace to which you need, 
+and some test, which shows correct work of this function.
 
 Description of function "netns_change()":
-  If you need to change current netns to global netns: set the first argument "NULL", the second argument is file       descriptor of global netns (it must be saved before first call of this function). If you need to change current       netns to another netns: set the first argument as netns which you need, the second argument may be any.
+  If you need to change current netns to global netns: set the first argument "NULL", the second argument is file
+  descriptor of global netns (it must be saved before first call of this function). If you need to change current
+  netns to another netns: set the first argument as netns which you need, the second argument may be any.
 
 Algorithm of function "netns_change()":
-  1.If "nsname" == NULL (we need to return to global netns) and file descriptor of global network namespace is correct -> join to global network namespace and exit function succesfull.
+  1.If "nsname" == NULL (we need to return to global netns) and file descriptor of global network namespace is correct->
+  -> join to global network namespace and exit function succesfull.
   If "nsname" != NULL (we need to change to some netns) do:
   2.Get path for network namespace "nsname".
   3.Create the base netns directory if it doesn't exist.
@@ -13,10 +17,12 @@ Algorithm of function "netns_change()":
 
 ----------------------------------------------------------------------------------------------------------------------
 
-File "open_socket_in_netns.c" contain two functions: "netns_change()"(described below) and "open_socket_in_netns()", which open socket in netns, which you need.
+File "open_socket_in_netns.c" contain two functions: "netns_change()"(described below) and "open_socket_in_netns()", 
+which open socket in netns, which you need.
 
 Description of function "open_socket_in_netns()":
-  The first argument is name of network namespace, in which you need to open socket. The next free arguments specified   by function "socket": domain, type, protocol.
+  The first argument is name of network namespace, in which you need to open socket. The next free arguments specified
+  by function "socket": domain, type, protocol.
   
 Algorithm of function "open_socket_in_netns()":
   1.Get path to the global network namespace of this process.
