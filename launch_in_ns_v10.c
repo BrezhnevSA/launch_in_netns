@@ -1,26 +1,17 @@
-#define _ATFILE_SOURCE
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/wait.h>
-#include <sys/inotify.h>
-#include <sys/mount.h>
 #include <sys/param.h>
-#include <sys/syscall.h>
 #include <stdio.h>
 #include <string.h>
-#include <sched.h>
 #include <fcntl.h>
-#include <dirent.h>
 #include <errno.h>
 #include <unistd.h>
-#include <ctype.h>
 
 #ifndef NETNS_RUN_DIR
 #define NETNS_RUN_DIR "/var/run/netns"
 #endif
 
 #define CLONE_NEWNET 0x40000000	
-#define PART1_GLOBAL_NETNS_PATH "/proc/"
+
+#define PART1_GLOBAL_NETNS_PATH "/proc/" 
 #define PART2_GLOBAL_NETNS_PATH "/ns/net"
 
 static int netns_change(const char *nsname, int fd_global_netns)
@@ -71,7 +62,7 @@ static int netns_change(const char *nsname, int fd_global_netns)
 
 /* Join to network namespace "nsname" */
 	if (unshare(CLONE_NEWNET) < 0) {
-		fprintf(stderr, "***---*** Failed to create a new network namespace \"%s\": %s\n",
+		fprintf(stderr, "*** Failed to create a new network namespace \"%s\": %s\n",
 			nsname, strerror(errno));
 		return -1;
 	}
@@ -81,11 +72,12 @@ static int netns_change(const char *nsname, int fd_global_netns)
 
 int main(int argc, char** argv)
 {
-  int fd_global_netns;
+  int fd_global_netns; /* File descriptor of global network namespace */
   char *nsname1 = "NS1", *nsname2 = "NS2";
-  static char path1[MAXPATHLEN] = {0};
-  static char pid_[30] = {0};
-  
+  static char path1[MAXPATHLEN] = {0}; /* Path to the global network namespace of this process */
+  static char pid_[30] = {0}; /* Pid the current process */
+
+/* Get path to the global network namespace of this process */  
   strcat(path1,PART1_GLOBAL_NETNS_PATH);
   sprintf(pid_, "%ld", (long)getpid());
   strcat(path1,pid_);
@@ -99,7 +91,6 @@ int main(int argc, char** argv)
 		strerror(errno));
 	return -1;
   }
-  close(fd_global_netns);
   
 /* Testing function netns_change() */
   fprintf(stdout,"*** ---------------------------------\n");
@@ -130,5 +121,6 @@ int main(int argc, char** argv)
   netns_change(NULL, fd_global_netns);
   system("ifconfig -a");
   
+  close(fd_global_netns);
   return 0; 
 }
