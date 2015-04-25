@@ -3,6 +3,7 @@
 #include <string.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <malloc.h>
 #include <unistd.h>
 
 #ifndef NETNS_RUN_DIR
@@ -63,13 +64,16 @@ static int netns_change(const char *ns_name, int fd_global_netns) {
 	return 0;
 }
 
-int open_socket_in_netns(const char **ns_names, int num_netns, int domain, int type, int protocol) {
+int* open_socket_in_netns(const char **ns_names, int num_netns, int domain, int type, int protocol) {
 	int fd_global_netns; /* File descriptor of global network namespace */
-	int fd_socket; /* File descriptor of socket which openning in netns ns_names[i] */
+	int *fd_socket; /* File descriptors sockets that openning in netns ns_names[i] */
 	int exit_stat; /* Exit status of function netns_change() */
 	int i; /* Index of current network namespace */
 	static char path1[MAXPATHLEN] = {0}; /* Path to global netns of this process */
         static char pid_current[30] = {0}; /* Pid the current process */
+
+/* Allocate memory for array fd_socket */
+	fd_socket = (int*)malloc(sizeof(int)*num_netns);
 	
 /* Get path to the global network namespace of this process */  
 	strcat(path1,PART1_GLOBAL_NETNS_PATH);
@@ -79,7 +83,6 @@ int open_socket_in_netns(const char **ns_names, int num_netns, int domain, int t
 	
 /* Save file descriptor of global network namespace */
 	fd_global_netns = open(path1, O_RDONLY, 0);
-	fprintf(stdout,"*** path1 is:%s, fd_global_netns is:%d\n",path1,fd_global_netns);
 	if (fd_global_netns < 0) {
 		fprintf(stderr, "*** Cannot get file descriptor of global namespace file : %s\n",
 				strerror(errno));
@@ -103,8 +106,8 @@ int open_socket_in_netns(const char **ns_names, int num_netns, int domain, int t
 		}
 
 /* Open socket in netns ns_names[i] */	
-		fd_socket = socket(domain, type, protocol);
-		if (fd_socket < 0) {
+		fd_socket[i] = socket(domain, type, protocol);
+		if (fd_socket[i] < 0) {
 			fprintf(stderr, "*** Cannot open socket in network namespace \"%s\": %s\n",
 					ns_names[i], strerror(errno));
 			return -2;
@@ -122,6 +125,6 @@ int open_socket_in_netns(const char **ns_names, int num_netns, int domain, int t
 /* Close file descriptor of global network namespace */	
 	close(fd_global_netns);
 	
-/*Return file descriptor of socket which openning in netns "nsname" */	
+/* Return array of file descriptors sockets which openning in netns nsnames */	
 	return fd_socket;
 }
