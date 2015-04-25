@@ -18,20 +18,22 @@ Algorithm of function "netns_change()":
 ----------------------------------------------------------------------------------------------------------------------
 
 File "open_socket_in_netns.c" contain two functions: "netns_change()"(described below) and "open_socket_in_netns()", 
-which open socket in netwotk namespace, which you need.
+which open sockets in netwotk namespaces, which you need.
 
 Description of function "open_socket_in_netns()":
   The first argument is array of names network namespaces (nsnames), in which you need to open socket. Second argument
   is count of network namespaces (num_netns) and the next free arguments specified by system call socket(): 
   domain, type, protocol.
+  Function returns file descriptors sockets (fd_sockets) which opened in network namespaces (nsnames).
   
 Algorithm of function "open_socket_in_netns()":
-  1.Get path to the global network namespace of this process.
-  2.Save file descriptor of global network namespace.
+    1.Allocate memory for array fd_socket.
+    2.Get path to the global network namespace of this process.
+    3.Save file descriptor of global network namespace.
   In cycle iterate network namespaces (ns_names):
-    3.Change netns to "ns_name[i]".
-    4.Open socket in netns "ns_name[i]".
+    4.Change netns to "ns_name[i]".
+    5.Open socket in netns "ns_name[i]".
   After cycle:  
-    5.Return to global netns.
-    6.Close file descriptor of global network namespace.
-    7.Return file descriptor of socket which openning in netns "nsname".
+    6.Return to global netns.
+    7.Close file descriptor of global network namespace.
+    8.Return file descriptor of socket which openning in netns "nsname".
