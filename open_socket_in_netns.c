@@ -14,7 +14,7 @@
 #define PART1_GLOBAL_NETNS_PATH "/proc/" 
 #define PART2_GLOBAL_NETNS_PATH "/ns/net"
 
-static int netns_change(const char *nsname, int fd_global_netns) {
+static int netns_change(const char *ns_name, int fd_global_netns) {
 /* If you need to change current netns to global netns:
  * set the first argument "NULL", the second argument 
  * is file descriptor of global netns (it must be saved
@@ -27,14 +27,14 @@ static int netns_change(const char *nsname, int fd_global_netns) {
 	int fd_netns;
 
  /*  Join to global network namespace
-  *  if (network namespace "nsname" == NULL && 
+  *  if (network namespace "ns_name" == NULL && 
   *  file descriptor of global network namespace
   *  "fd_global_netns" >-1)
   *  else exit function with error -1
   *  if (file descriptor of global network namespace
   *  "fd_global_netns" < 0) 
  */
-	if (nsname == NULL) {
+	if (ns_name == NULL) {
 		fprintf(stdout,"*** fd_global_netns is:%d\n",fd_global_netns);
 		if (setns(fd_global_netns, CLONE_NEWNET) == -1) {			
 			return -1;
@@ -42,8 +42,8 @@ static int netns_change(const char *nsname, int fd_global_netns) {
 		return 0;
 	}
 
-/* Get path for network namespace "nsname" */	
-	snprintf(netns_path, sizeof(netns_path), "%s/%s", NETNS_RUN_DIR, nsname);
+/* Get path for network namespace "ns_name" */	
+	snprintf(netns_path, sizeof(netns_path), "%s/%s", NETNS_RUN_DIR, ns_name);
 
 /* Create the base netns directory if it doesn't exist */
 	mkdir(NETNS_RUN_DIR, S_IRWXU|S_IRGRP|S_IXGRP|S_IROTH|S_IXOTH);
@@ -55,7 +55,7 @@ static int netns_change(const char *nsname, int fd_global_netns) {
 	}
 	close(fd_netns);
 
-/* Join to network namespace "nsname" */
+/* Join to network namespace "ns_name" */
 	if (unshare(CLONE_NEWNET) < 0) {		
 		return -1;
 	}
@@ -63,17 +63,18 @@ static int netns_change(const char *nsname, int fd_global_netns) {
 	return 0;
 }
 
-int open_socket_in_netns(const char *nsname, int domain, int type, int protocol) {
+int open_socket_in_netns(const char **ns_names, int num_netns, int domain, int type, int protocol) {
 	int fd_global_netns; /* File descriptor of global network namespace */
-	int fd_socket; /* File descriptor of socket which openning in netns "nsname" */
+	int fd_socket; /* File descriptor of socket which openning in netns ns_names[i] */
 	int exit_stat; /* Exit status of function netns_change() */
+	int i; /* Index of current network namespace */
 	static char path1[MAXPATHLEN] = {0}; /* Path to global netns of this process */
-    static char pid_[30] = {0}; /* Pid the current process */
+        static char pid_current[30] = {0}; /* Pid the current process */
 	
 /* Get path to the global network namespace of this process */  
 	strcat(path1,PART1_GLOBAL_NETNS_PATH);
-	sprintf(pid_, "%ld", (long)getpid());
-	strcat(path1,pid_);
+	sprintf(pid_current, "%ld", (long)getpid());
+	strcat(path1,pid_current);
 	strcat(path1,PART2_GLOBAL_NETNS_PATH);
 	
 /* Save file descriptor of global network namespace */
@@ -84,26 +85,30 @@ int open_socket_in_netns(const char *nsname, int domain, int type, int protocol)
 				strerror(errno));
 		return -1;
 	}	
-	
-/* Change netns to "nsname" */	
-	exit_stat = netns_change(nsname, fd_global_netns);
-	if (exit_stat == -1) {
-		fprintf(stderr, "*** Failed to create(or set) a new network namespace \"%s\": %s\n",
-			nsname, strerror(errno));
-		return -1;
-	}
-	else if (exit_stat == -2) {
-		fprintf(stderr, "*** Cannot create network namespace(\"%s\") file : %s\n",
-			nsname, strerror(errno));
-		return -2;
-	}
 
-/* Open socket in netns "nsname" */	
-	fd_socket = socket(domain, type, protocol);
-    if (fd_socket < 0) {
-        fprintf(stderr, "*** Cannot open socket in network namespace \"%s\": %s\n",
-				nsname, strerror(errno));
-		return -2;
+/* Set ns_name[i] as a network namespace, open socket */	
+	for(i = 0; i < num_netns; i++)
+	{		
+/* Change netns to ns_names[i] */	
+		exit_stat = netns_change(ns_names[i], fd_global_netns);
+		if (exit_stat == -1) {
+			fprintf(stderr, "*** Failed to create(or set) a new network namespace \"%s\": %s\n",
+				ns_names[i], strerror(errno));
+			return -1;
+		}
+		else if (exit_stat == -2) {
+			fprintf(stderr, "*** Cannot create network namespace(\"%s\") file : %s\n",
+				ns_names[i], strerror(errno));
+			return -2;
+		}
+
+/* Open socket in netns ns_names[i] */	
+		fd_socket = socket(domain, type, protocol);
+		if (fd_socket < 0) {
+			fprintf(stderr, "*** Cannot open socket in network namespace \"%s\": %s\n",
+					ns_names[i], strerror(errno));
+			return -2;
+		}
 	}
 	
 /* Return to global netns */	
@@ -113,7 +118,7 @@ int open_socket_in_netns(const char *nsname, int domain, int type, int protocol)
 				strerror(errno));
 		return -1;
 	}
-
+	
 /* Close file descriptor of global network namespace */	
 	close(fd_global_netns);
 	
