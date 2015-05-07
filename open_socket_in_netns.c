@@ -54,13 +54,15 @@ static int netns_change(const char *ns_name, int fd_global_netns) {
 	if (fd_netns < 0) {		
 		return -2;
 	}
-	close(fd_netns);
+	
 
 /* Join to network namespace "ns_name" */
-	if (unshare(CLONE_NEWNET) < 0) {		
+	if (setns(fd_netns, CLONE_NEWNET) == -1) {		
 		return -1;
 	}
-	 
+	
+	close(fd_netns);
+	
 	return 0;
 }
 
