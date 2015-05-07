@@ -46,9 +46,6 @@ static int netns_change(const char *ns_name, int fd_global_netns) {
 /* Get path for network namespace "ns_name" */	
 	snprintf(netns_path, sizeof(netns_path), "%s/%s", NETNS_RUN_DIR, ns_name);
 
-/* Create the base netns directory if it doesn't exist */
-	mkdir(NETNS_RUN_DIR, S_IRWXU|S_IRGRP|S_IXGRP|S_IROTH|S_IXOTH);
-
 /* Create(or open) netns file */
 	fd_netns = open(netns_path, O_RDONLY|O_CREAT|O_EXCL, 0);
 	if (fd_netns < 0) {		
